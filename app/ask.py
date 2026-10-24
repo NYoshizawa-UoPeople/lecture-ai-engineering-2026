@@ -11,19 +11,26 @@
 """
 
 import argparse
+import os
 
 from google import genai
-from google.genai import errors
+from google.genai import errors, types
 
 from app.config import MODEL, api_error_message, get_api_key
 
 # 講座に固有の質問。正しい答えは data/glossary.json の homework-levels にある
 DEFAULT_QUESTION = "AIE2026の講座の宿題にある「3レベル」とは何ですか？"
+DEFAULT_TEMPERATURE = 1.0
 
 
 def ask(question: str) -> str:
     client = genai.Client(api_key=get_api_key())
-    response = client.models.generate_content(model=MODEL, contents=question)
+    temperature = float(os.getenv("AIE_TEMPERATURE", str(DEFAULT_TEMPERATURE)))
+    response = client.models.generate_content(
+        model=MODEL,
+        contents=question,
+        config=types.GenerateContentConfig(temperature=temperature),
+    )
 
     usage = response.usage_metadata
     if usage is None:
